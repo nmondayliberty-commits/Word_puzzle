@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sight Words: Missing Letters Challenge</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --card-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #1f2937;
+            position: relative;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #8ec9f0 0%, #bfe4fb 35%, #eaf8ec 75%, #d7f2d0 100%);
+        }
+
+        /* ---------- Decorative sky scene (pure CSS, behind the card) ---------- */
+        .scene {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .sun {
+            position: absolute;
+            top: 8%;
+            right: 10%;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fff6cf, #ffd76a 60%, #ffc93c 100%);
+            box-shadow: 0 0 60px 25px rgba(255, 214, 92, 0.55);
+            animation: pulse-sun 5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-sun {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        .cloud {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 100px;
+            opacity: 0.9;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.06));
+        }
+
+        .cloud::before, .cloud::after {
+            content: "";
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+        }
+
+        .cloud-1 { width: 120px; height: 42px; top: 12%; left: -160px; animation: drift 34s linear infinite; }
+        .cloud-1::before { width: 60px; height: 60px; top: -30px; left: 15px; }
+        .cloud-1::after { width: 46px; height: 46px; top: -20px; left: 60px; }
+
+        .cloud-2 { width: 90px; height: 34px; top: 25%; left: -140px; animation: drift 26s linear infinite; animation-delay: -8s; }
+        .cloud-2::before { width: 46px; height: 46px; top: -22px; left: 10px; }
+        .cloud-2::after { width: 36px; height: 36px; top: -14px; left: 44px; }
+
+        .cloud-3 { width: 150px; height: 50px; top: 6%; left: -200px; animation: drift 42s linear infinite; animation-delay: -20s; }
+        .cloud-3::before { width: 70px; height: 70px; top: -35px; left: 20px; }
+        .cloud-3::after { width: 56px; height: 56px; top: -24px; left: 78px; }
+
+        @keyframes drift {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(100vw + 250px)); }
+        }
+
+        .float-item {
+            position: absolute;
+            font-size: 1.8rem;
+            animation: bob 6s ease-in-out infinite;
+            opacity: 0.9;
+        }
+
+        .float-item.star { font-size: 1.4rem; }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-18px) rotate(8deg); }
+        }
+
+        .hill {
+            position: absolute;
+            bottom: -10%;
+            left: -5%;
+            width: 110%;
+            height: 26%;
+            background: linear-gradient(180deg, #9ee08a 0%, #7bcf6c 100%);
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            opacity: 0.85;
+        }
+
+        .hill-2 {
+            position: absolute;
+            bottom: -14%;
+            right: -10%;
+            width: 70%;
+            height: 20%;
+            background: linear-gradient(180deg, #b3e89f 0%, #93da7c 100%);
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            opacity: 0.7;
+        }
+
+        /* ---------- Card ---------- */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 45px rgba(30, 64, 175, 0.25);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header / Backdrop Theme Header */
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        /* Screen Management */
+        .screen {
+            padding: 30px;
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Welcome Screen */
+        .welcome-content {
+            text-align: center;
+        }
+
+        .welcome-content p {
+            margin-bottom: 25px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Quiz Header Stats */
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 0.95rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
+        }
+
+        /* Timer Bar */
+        .timer-container {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--success);
+            transition: width 1s linear, background-color 0.3s ease;
+        }
+
+        .timer-bar.warning {
+            background: var(--accent);
+        }
+
+        .timer-bar.danger {
+            background: var(--danger);
+        }
+
+        /* Word Container & Letter Slots */
+        .word-challenge-area {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .instruction-text {
+            font-size: 1.1rem;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        .letter-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .slot-box {
+            width: 45px;
+            height: 55px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            background: #f8fafc;
+            color: #1e293b;
+            transition: all 0.2s ease;
+        }
+
+        .slot-box:focus {
+            border-color: var(--primary);
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .slot-box.fixed {
+            background: #e2e8f0;
+            color: #475569;
+            border-color: #cbd5e1;
+            pointer-events: none;
+        }
+
+        .submit-container {
+            text-align: center;
+        }
+
+        /* Results Screen */
+        .results-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .score-badge {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .performance-comment {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .review-list {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            background: #f9fafb;
+        }
+
+        .review-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-word {
+            font-weight: 600;
+        }
+
+        .review-status.correct {
+            color: var(--success);
+        }
+
+        .review-status.incorrect {
+            color: var(--danger);
+        }
+
+        .center-btn {
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sun, .cloud-1, .cloud-2, .cloud-3, .float-item {
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Decorative animated sky scene -->
+    <div class="scene" aria-hidden="true">
+        <div class="sun"></div>
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        <div class="cloud cloud-3"></div>
+        <div class="float-item star" style="top:15%; left:18%; animation-delay:-1s;">⭐</div>
+        <div class="float-item" style="top:38%; left:8%; animation-delay:-3s;">🎈</div>
+        <div class="float-item star" style="top:60%; left:85%; animation-delay:-2s;">✨</div>
+        <div class="float-item" style="top:20%; left:78%; animation-delay:-4.5s;">🦋</div>
+        <div class="float-item star" style="top:45%; left:92%; animation-delay:-5s;">⭐</div>
+        <div class="hill"></div>
+        <div class="hill-2"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header Backdrop -->
+        <div class="header">
+            <h1>Sight Words Challenge</h1>
+            <p>Fill in the missing letters before time runs out!</p>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="welcome-content">
+                <p>Welcome to your spelling exercise! You will have 20 words total. For each word, some letters are missing. Type the correct missing letters into the blank boxes. You have exactly <strong>20 seconds</strong> per word. Good luck!</p>
+                <button class="btn" onclick="startQuiz()">Start Exercise</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-info">
+                <span id="progress-indicator">Word 1 of 20</span>
+                <span id="time-indicator">20s</span>
+            </div>
+
+            <div class="timer-container">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
+
+            <div class="word-challenge-area">
+                <div class="instruction-text">Complete the missing letters:</div>
+                <div id="letter-slots" class="letter-slots"></div>
+            </div>
+
+            <div class="submit-container">
+                <button class="btn" id="next-btn" onclick="submitAnswer()">Next Word</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="results-header">
+                <div class="score-badge" id="final-score-display">0 / 20</div>
+                <div class="performance-comment" id="performance-comment">Great job!</div>
+            </div>
+
+            <div class="review-list" id="review-list">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div class="center-btn">
+                <button class="btn" onclick="restartQuiz()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 20 Words dataset with predefined missing letter indexes (true means fixed/shown, false means input slot)
+        const wordsData = [
+            { word: "PURPLE", pattern: [true, false, true, false, true, false] },       // P _ r _ l _
+            { word: "GREEN", pattern: [true, true, false, false, true] },            // G r _ _ n
+            { word: "CIRCLE", pattern: [true, false, true, false, true, false] },      // C _ r _ l _
+            { word: "AMAZING", pattern: [true, true, false, true, false, true, true] }, // A m _ z _ n g
+            { word: "SHOCK", pattern: [true, true, false, true, true] },             // S h _ c k
+            { word: "EXCITED", pattern: [true, true, true, false, true, false, true] },// E x c _ t _ d
+            { word: "GRADE", pattern: [true, true, false, true, false] },            // G r _ d _
+            { word: "FRIEND", pattern: [true, true, false, true, false, true] },       // F r _ e _ d
+            { word: "STATE", pattern: [true, true, false, true, false] },            // S t _ t _
+            { word: "DUTIES", pattern: [true, true, true, false, true, true] },        // D u t _ e s
+            { word: "MARKET", pattern: [true, false, true, true, false, true] },       // M _ r k _ t
+            { word: "TOILET", pattern: [true, false, true, true, false, true] },       // T _ i l _ t
+            { word: "BLOOD", pattern: [true, true, false, false, true] },            // B l _ _ d
+            { word: "QUIT", pattern: [true, false, true, true] },                    // Q _ i t
+            { word: "SHAKE", pattern: [true, true, false, true, false] },            // S h _ k _
+            { word: "NIGERIA", pattern: [true, false, true, false, true, true, true] }, // N _ g _ r i a
+            { word: "TROUBLE", pattern: [true, true, false, true, true, true, false] }, // T r _ u b l _
+            { word: "BEAUTIFUL", pattern: [true, true, false, true, true, false, true, true, true] }, // B e _ u t _ f u l
+            { word: "COUNTRY", pattern: [true, false, true, true, true, true, false] }, // C _ u n t r _
+            { word: "KITCHEN", pattern: [true, false, true, true, true, false, true] }  // K _ t c h _ n
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let userResults = [];
+        let timerInterval = null;
+        let timeLeft = 20;
+        const timePerWord = 20;
+
+        function startQuiz() {
+            currentIndex = 0;
+            score = 0;
+            userResults = [];
+            document.getElementById('welcome-screen').classList.remove('active');
+            document.getElementById('quiz-screen').classList.add('active');
+            loadWord();
+        }
+
+        function loadWord() {
+            clearInterval(timerInterval);
+            timeLeft = timePerWord;
+            updateTimerDisplay();
+
+            const currentObj = wordsData[currentIndex];
+            document.getElementById('progress-indicator').innerText = `Word ${currentIndex + 1} of ${wordsData.length}`;
+            
+            const slotsContainer = document.getElementById('letter-slots');
+            slotsContainer.innerHTML = '';
+
+            currentObj.word.split('').forEach((letter, idx) => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.className = 'slot-box';
+                
+                if (currentObj.pattern[idx]) {
+                    input.value = letter;
+                    input.classList.add('fixed');
+                    input.readOnly = true;
+                } else {
+                    input.dataset.index = idx;
+                    input.dataset.expected = letter;
+                    // Focus helper on typing next input
+                    input.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.toUpperCase();
+                        if (e.target.value && e.target.nextElementSibling) {
+                            // Find next editable input
+                            let next = e.target.nextElementSibling;
+                            while(next && next.classList.contains('fixed')) {
+                                next = next.nextElementSibling;
+                            }
+                            if (next) next.focus();
+                        }
+                    });
+                }
+                slotsContainer.appendChild(input);
+            });
+
+            // Focus the first empty input box
+            const firstEditable = slotsContainer.querySelector('input:not(.fixed)');
+            if (firstEditable) firstEditable.focus();
+
+            startTimer();
+        }
+
+        function startTimer() {
+            const timerBar = document.getElementById('timer-bar');
+            timerBar.style.width = '100%';
+            timerBar.className = 'timer-bar';
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                const percentage = (timeLeft / timePerWord) * 100;
+                timerBar.style.width = `${percentage}%`;
+
+                if (timeLeft <= 8 && timeLeft > 4) {
+                    timerBar.classList.add('warning');
+                } else if (timeLeft <= 4) {
+                    timerBar.classList.remove('warning');
+                    timerBar.classList.add('danger');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitAnswer(true); // Auto submit on timeout
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('time-indicator').innerText = `${timeLeft}s`;
+        }
+
+        function submitAnswer(isTimeout = false) {
+            clearInterval(timerInterval);
+            const currentObj = wordsData[currentIndex];
+            const inputs = document.querySelectorAll('.slot-box');
+            
+            let assembledWord = '';
+            inputs.forEach((input, idx) => {
+                if (input.classList.contains('fixed')) {
+                    assembledWord += currentObj.word[idx];
+                } else {
+                    assembledWord += (input.value ? input.value.toUpperCase() : '_');
+                }
+            });
+
+            const isCorrect = (assembledWord === currentObj.word);
+            if (isCorrect) {
+                score++;
+            }
+
+            userResults.push({
+                word: currentObj.word,
+                userEntered: assembledWord,
+                correct: isCorrect,
+                timedOut: isTimeout
+            });
+
+            currentIndex++;
+            if (currentIndex < wordsData.length) {
+                loadWord();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.remove('active');
+            document.getElementById('results-screen').classList.add('active');
+
+            document.getElementById('final-score-display').innerText = `${score} / ${wordsData.length}`;
+            
+            // Performance feedback commentary
+            let comment = "";
+            const percentageScore = (score / wordsData.length) * 100;
+            if (percentageScore === 100) {
+                comment = "Outstanding! Perfect score! You mastered every single sight word!";
+            } else if (percentageScore >= 80) {
+                comment = "Great job! Excellent command of grammar and sight words.";
+            } else if (percentageScore >= 50) {
+                comment = "Good effort! A little more practice will make you a spelling expert.";
+            } else {
+                comment = "Keep practicing! Review your sight words and try again.";
+            }
+            document.getElementById('performance-comment').innerText = comment;
+
+            // Populate comprehensive review sheet
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+            userResults.forEach((res, index) => {
+                const item = document.createElement('div');
+                item.className = 'review-item';
+                
+                const statusText = res.correct ? 'Correct' : (res.timedOut ? 'Time Out' : `Incorrect (${res.userEntered})`);
+                const statusClass = res.correct ? 'correct' : 'incorrect';
+
+                item.innerHTML = `
+                    <span class="review-word">${index + 1}. ${res.word}</span>
+                    <span class="review-status ${statusClass}">${statusText}</span>
+                `;
+                reviewList.appendChild(item);
+            });
+        }
+
+        function restartQuiz() {
+            document.getElementById('results-screen').classList.remove('active');
+            document.getElementById('welcome-screen').classList.add('active');
+        }
+    </script>
+</body>
+</html>
